@@ -1,10 +1,12 @@
-from typing import Tuple
+from typing import Tuple, List
 
 import pathlib
 from dataclasses import dataclass, asdict
 from datetime import datetime
 
 import requests
+
+from fxbouncer.structs import Downloadable
 
 
 @dataclass
@@ -100,21 +102,45 @@ def compose_username_tweet_id_filename(input_string, tweet_url, media_url, part_
 
     return None
 
-def list_to_downloadables(data: list[OpenGraphData]) -> list[Tuple[str, str]]:
-    arr: list[Tuple[str, str]] = []
+def transform_image_url(url: str) -> List[str]:
+    """
+    Takes the original image URL and returns a list of possible URLs
+    based on variations (e.g., with different formats and sizes).
+    """
+    return [
+        url.replace(".jpg", "?format=jpg&name=4096x4096"),
+        url + ":large",
+        url
+    ]
+
+
+def list_to_downloadables(data: List[OpenGraphData]) -> List[Downloadable]:
+    arr: List[Downloadable] = []
 
     for d in data:
         if d.video != "":
-            arr.append((compose_username_tweet_id_filename(d.title, d.url, d.video), d.video))
+            # Video case: only one URL
+            arr.append(Downloadable(
+                compose_username_tweet_id_filename(d.title, d.url, d.video),
+                [d.video]
+            ))
         else:
+            # Image case: multiple possible URLs
             image_urls = transform_image_url(d.image)
+
             # Check the number of image URLs
             if len(image_urls) > 1:
                 for index, image_url in enumerate(image_urls, start=1):
-                    arr.append((compose_username_tweet_id_filename(d.title, d.url, image_url, part_number=index), image_url + ":large"))
+                    arr.append(Downloadable(
+                        compose_username_tweet_id_filename(d.title, d.url, image_url, part_number=index),
+                        [image_url]
+                    ))
             else:
                 # If there's only one image, don't pass part_number
-                arr.append((compose_username_tweet_id_filename(d.title, d.url, image_urls[0]), image_urls[0] + ":large"))
+                arr.append(Downloadable(
+                    compose_username_tweet_id_filename(d.title, d.url, image_urls[0]),
+                    [image_urls[0]]
+                ))
 
     return arr
 

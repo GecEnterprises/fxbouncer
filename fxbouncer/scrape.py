@@ -1,5 +1,6 @@
 from typing import Tuple, Literal
 
+import click
 import pathlib
 import requests
 from bs4 import BeautifulSoup
@@ -31,20 +32,35 @@ def scrape_og_tags(url, headers):
         return None
 
 
-def download_file(filename: str, url: str, output_directory: pathlib.Path) -> None:
+def download_file(filename: str, url: str, output_directory: pathlib.Path) -> bool:
     local_filename = os.path.join(output_directory, filename)
 
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()  # Raise an error for bad responses
-        with open(local_filename, 'wb') as f:
+    try:
+        with requests.get(url, stream=True) as r:
+            if not r.ok:
+                click.echo(f"Failed to download {url}: {r.status_code}")
+                return False  # Non-2xx status, skip to the next URL
+
+            content_type = r.headers.get('content-type', '')
+            if 'text/' in content_type:
+                click.echo(f"Skipping {url}, MIME type mismatch: {content_type}")
+                return False  # MIME type is not an image or video
+
+            r.raise_for_status()  # Raise an error for other bad responses
+
             total_length = int(r.headers.get('content-length', 0))
-            if total_length == 0:  # Handle cases where content-length is not available
-                f.write(r.content)
-            else:
-                for chunk in tqdm(r.iter_content(chunk_size=4096), total=total_length // 4096,
-                                  desc=f"Downloading {filename}", unit='KB'):
-                    if chunk:  # Filter out keep-alive new chunks
-                        f.write(chunk)
+            with open(local_filename, 'wb') as f:
+                if total_length == 0:  # Handle cases where content-length is not available
+                    f.write(r.content)
+                else:
+                    for chunk in tqdm(r.iter_content(chunk_size=4096), total=total_length // 4096,
+                                      desc=f"Downloading {filename}", unit='KB'):
+                        if chunk:  # Filter out keep-alive new chunks
+                            f.write(chunk)
+        return True  # Success
+    except Exception as e:
+        click.echo(f"Error during download from {url}: {str(e)}")
+        return False  # Skip to the next URL
 
 def process_url(url, new_domain):
     """Process a URL to change the domain and keep only the path."""

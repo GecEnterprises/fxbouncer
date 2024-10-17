@@ -88,13 +88,24 @@ def batch_download(input, mosaic_merging, meta_json, output_directory):
     save_json(results, output_directory)
 
     downloadables = list_to_downloadables(results)
+
     with tqdm(downloadables, desc="Downloading Files", total=len(downloadables), file=sys.stderr) as progress_bar:
-        for filename, download_url in progress_bar:
-            try:
-                progress_bar.set_postfix_str(f"Downloading: {filename}")  # Update tqdm status
-                download_file(filename, download_url, output_directory)  # Pass the filename into download_file
-            except Exception as e:
-                click.echo(f"Error downloading {filename} from {download_url}: {str(e)}", err=True)
+        for downloadable in progress_bar:
+            filename = downloadable.title  # The title will be used as the filename
+            possible_urls = downloadable.possible_urls
+
+            success = False
+            for download_url in possible_urls:
+                try:
+                    progress_bar.set_postfix_str(f"Trying: {download_url}")  # Update tqdm status
+                    success = download_file(filename, download_url, output_directory)  # Try each possible URL
+                    if success:
+                        break  # If download succeeds, stop trying further URLs
+                except Exception as e:
+                    click.echo(f"Error downloading {filename} from {download_url}: {str(e)}", err=True)
+
+            if not success:
+                click.echo(f"Skipping {filename}, no valid URLs found.", err=True)
 
     click.echo(f"Scraping completed")
 
