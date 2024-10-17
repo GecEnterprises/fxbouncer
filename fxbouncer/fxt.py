@@ -67,7 +67,7 @@ def extract_filename(url):
     return None  # Return None if no match is found
 
 
-def transform_image_url(input_url):
+def transform_mosaic(input_url):
     # Check if the input URL contains the correct domain
     if "mosaic.fxtwitter.com" not in input_url:
         return [input_url]
@@ -102,17 +102,12 @@ def compose_username_tweet_id_filename(input_string, tweet_url, media_url, part_
 
     return None
 
-def transform_image_url(url: str) -> List[str]:
-    """
-    Takes the original image URL and returns a list of possible URLs
-    based on variations (e.g., with different formats and sizes).
-    """
+def transform_image_url_variants(url: str) -> List[str]:
     return [
         url.replace(".jpg", "?format=jpg&name=4096x4096"),
         url + ":large",
         url
     ]
-
 
 def list_to_downloadables(data: List[OpenGraphData]) -> List[Downloadable]:
     arr: List[Downloadable] = []
@@ -126,20 +121,20 @@ def list_to_downloadables(data: List[OpenGraphData]) -> List[Downloadable]:
             ))
         else:
             # Image case: multiple possible URLs
-            image_urls = transform_image_url(d.image)
+            mosaics = transform_mosaic(d.image)
 
             # Check the number of image URLs
-            if len(image_urls) > 1:
-                for index, image_url in enumerate(image_urls, start=1):
+            if len(mosaics) > 1:
+                for index, image_url in enumerate(mosaics, start=1):
                     arr.append(Downloadable(
-                        compose_username_tweet_id_filename(d.title, d.url, image_url, part_number=index),
-                        [image_url]
+                        compose_username_tweet_id_filename(d.title, d.url, d.image, part_number=index),
+                        transform_image_url_variants(image_url)
                     ))
             else:
                 # If there's only one image, don't pass part_number
                 arr.append(Downloadable(
-                    compose_username_tweet_id_filename(d.title, d.url, image_urls[0]),
-                    [image_urls[0]]
+                    compose_username_tweet_id_filename(d.title, d.url, d.image),
+                    transform_image_url_variants(mosaics[0])
                 ))
 
     return arr
