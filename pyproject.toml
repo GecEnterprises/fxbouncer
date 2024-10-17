@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "vxbouncer"
+version = "0.1.0"
+description = ""
+authors = ["reaganiwadha <22427233+reaganiwadha@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+requests = "^2.32.3"
+beautifulsoup4 = "^4.12.3"
+click = "^8.1.7"
+tqdm = "^4.66.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
