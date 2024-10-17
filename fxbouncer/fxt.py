@@ -111,10 +111,10 @@ def list_to_downloadables(data: list[OpenGraphData]) -> list[Tuple[str, str]]:
             # Check the number of image URLs
             if len(image_urls) > 1:
                 for index, image_url in enumerate(image_urls, start=1):
-                    arr.append((compose_username_tweet_id_filename(d.title, d.url, image_url, part_number=index), image_url))
+                    arr.append((compose_username_tweet_id_filename(d.title, d.url, image_url, part_number=index), image_url + ":large"))
             else:
                 # If there's only one image, don't pass part_number
-                arr.append((compose_username_tweet_id_filename(d.title, d.url, image_urls[0]), image_urls[0]))
+                arr.append((compose_username_tweet_id_filename(d.title, d.url, image_urls[0]), image_urls[0] + ":large"))
 
     return arr
 

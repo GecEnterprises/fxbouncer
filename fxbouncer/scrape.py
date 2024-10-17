@@ -7,7 +7,7 @@ from urllib.parse import urlparse, urlunparse
 import os
 from tqdm import tqdm
 
-from fxt import OpenGraphData
+from fxbouncer.fxt import OpenGraphData
 
 
 def scrape_og_tags(url, headers):

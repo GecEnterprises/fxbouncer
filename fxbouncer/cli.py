@@ -7,8 +7,8 @@ import pathlib
 from tqdm import tqdm
 import sys
 
-from fxt import OpenGraphData, download_and_write_image, list_to_downloadables
-from scrape import scrape_and_download, download_file
+from fxbouncer.fxt import OpenGraphData, download_and_write_image, list_to_downloadables
+from fxbouncer.scrape import scrape_and_download, download_file
 import json
 
 replace_with_domain = 'https://fxtwitter.com'
@@ -77,19 +77,26 @@ def batch_download(input, mosaic_merging, meta_json, output_directory):
     # Using tqdm with sys.stderr to avoid clashing with click.echo output
     with tqdm(urls, desc="Processing URLs", total=total_urls, file=sys.stderr) as progress_bar:
         for url in progress_bar:
-            progress_bar.set_postfix_str(f"{url}")  # Update tqdm status
-            processed_url, og_data = scrape_and_download(url, headers, replace_with_domain)
-            if og_data:
-                results.append(og_data)
+            try:
+                progress_bar.set_postfix_str(f"{url}")  # Update tqdm status
+                processed_url, og_data = scrape_and_download(url, headers, replace_with_domain)
+                if og_data:
+                    results.append(og_data)
+            except Exception as e:
+                click.echo(f"Error processing URL {url}: {str(e)}", err=True)
+
+    save_json(results, output_directory)
 
     downloadables = list_to_downloadables(results)
     with tqdm(downloadables, desc="Downloading Files", total=len(downloadables), file=sys.stderr) as progress_bar:
         for filename, download_url in progress_bar:
-            progress_bar.set_postfix_str(f"Downloading: {filename}")  # Update tqdm status
-            download_file(filename, download_url, output_directory)  # Pass the filename into download_file
+            try:
+                progress_bar.set_postfix_str(f"Downloading: {filename}")  # Update tqdm status
+                download_file(filename, download_url, output_directory)  # Pass the filename into download_file
+            except Exception as e:
+                click.echo(f"Error downloading {filename} from {download_url}: {str(e)}", err=True)
 
     click.echo(f"Scraping completed")
-    save_json(results, output_directory)
 
 if __name__ == '__main__':
     cli()
