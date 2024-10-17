@@ -127,7 +127,7 @@ def list_to_downloadables(data: List[OpenGraphData]) -> List[Downloadable]:
             if len(mosaics) > 1:
                 for index, image_url in enumerate(mosaics, start=1):
                     arr.append(Downloadable(
-                        compose_username_tweet_id_filename(d.title, d.url, d.image, part_number=index),
+                        compose_username_tweet_id_filename(d.title, d.url, image_url, part_number=index),
                         transform_image_url_variants(image_url)
                     ))
             else:
