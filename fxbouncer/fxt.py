@@ -1,5 +1,6 @@
 from typing import Tuple, List
 
+import nanoid
 import pathlib
 from dataclasses import dataclass, asdict
 from datetime import datetime
@@ -89,10 +90,13 @@ def transform_mosaic(input_url):
 
     return media_urls
 
-def compose_username_tweet_id_filename(input_string, tweet_url, media_url, part_number=None):
+def compose_username_tweet_id_filename(input_string, tweet_url, media_url, part_number=None, is_video=False):
     username = extract_username(input_string)
     tweet_id = extract_tweet_id(tweet_url)
     filename = extract_filename(media_url)
+
+    if is_video:
+        return f"{username}_{tweet_id}_{nanoid.generate()}.mp4"
 
     if username and tweet_id and filename:
         # Append part number if provided
@@ -116,7 +120,7 @@ def list_to_downloadables(data: List[OpenGraphData]) -> List[Downloadable]:
         if d.video != "":
             # Video case: only one URL
             arr.append(Downloadable(
-                compose_username_tweet_id_filename(d.title, d.url, d.video),
+                compose_username_tweet_id_filename(d.title, d.url, d.video, is_video=True),
                 [d.video]
             ))
         else:
