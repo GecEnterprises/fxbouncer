@@ -95,22 +95,25 @@ def transform_mosaic(input_url):
 def compose_username_tweet_id_filename(input_string, tweet_url, media_url, part_number=None, is_video=False):
     username = extract_username(input_string)
     tweet_id = extract_tweet_id(tweet_url)
-    filename = extract_filename(media_url)
 
-    end_filename = None
+    # Early return if required fields are missing
+    if not (username and tweet_id):
+        return None
 
     if is_video:
         end_filename = f"{username}_{tweet_id}_{nanoid.generate()}.mp4"
+    else:
+        filename = extract_filename(media_url)
+        if not filename:
+            return None
 
-    if username and tweet_id and filename:
-        # Append part number if provided
         if part_number is not None:
             end_filename = f"{username}_{tweet_id}_Part-{part_number}_{filename}"
-        end_filename = f"{username}_{tweet_id}_{filename}"
+        else:
+            end_filename = f"{username}_{tweet_id}_{filename}"
 
     print(username, tweet_id, end_filename)
-
-    return filename
+    return end_filename
 
 def transform_image_url_variants(url: str) -> List[str]:
     return [
