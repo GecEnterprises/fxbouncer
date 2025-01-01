@@ -54,11 +54,13 @@ def extract_username(input_string):
     return None  # Return None if no match is found
 
 def extract_tweet_id(url):
-    # Use a regular expression to find the numeric tweet ID
-    match = re.search(r'/(\d+)(?:[/?]|$)', url)
+    # Use a regular expression to find the numeric tweet ID, stopping at ? or /
+    match = re.search(r'/(\d+)', url)
     if match:
-        return match.group(1)  # Return the first captured group (the tweet ID)
-    return None  # Return None if no match is found
+        # Get the ID and remove anything after ? if present
+        tweet_id = match.group(1)
+        return tweet_id.split('?')[0]
+    return None
 
 def extract_filename(url):
     # Use a regular expression to find the filename at the end of the URL
@@ -95,16 +97,20 @@ def compose_username_tweet_id_filename(input_string, tweet_url, media_url, part_
     tweet_id = extract_tweet_id(tweet_url)
     filename = extract_filename(media_url)
 
+    end_filename = None
+
     if is_video:
-        return f"{username}_{tweet_id}_{nanoid.generate()}.mp4"
+        end_filename = f"{username}_{tweet_id}_{nanoid.generate()}.mp4"
 
     if username and tweet_id and filename:
         # Append part number if provided
         if part_number is not None:
-            return f"{username}_{tweet_id}_Part-{part_number}_{filename}"
-        return f"{username}_{tweet_id}_{filename}"
+            end_filename = f"{username}_{tweet_id}_Part-{part_number}_{filename}"
+        end_filename = f"{username}_{tweet_id}_{filename}"
 
-    return None
+    print(username, tweet_id, end_filename)
+
+    return filename
 
 def transform_image_url_variants(url: str) -> List[str]:
     return [

@@ -65,7 +65,7 @@ def batch_download(input, mosaic_merging, meta_json, output_directory):
     # Reading URLs from input file
     if os.path.isfile(input):
         with open(input, 'r') as file:
-            urls = [line.strip() for line in file.readlines()]
+            urls = [line.strip().split('?')[0] for line in file.readlines()]
     else:
         urls = input.split(',')
 
