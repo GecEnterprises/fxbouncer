@@ -35,32 +35,37 @@ def scrape_og_tags(url, headers):
 def download_file(filename: str, url: str, output_directory: pathlib.Path) -> bool:
     local_filename = os.path.join(output_directory, filename)
 
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6401.0 Safari/537.36'
+    }
+
     try:
-        with requests.get(url, stream=True) as r:
+        # Enable redirects and add custom headers
+        with requests.get(url, stream=True, headers=headers, allow_redirects=True) as r:
             if not r.ok:
                 click.echo(f"Failed to download {url}: {r.status_code}")
-                return False  # Non-2xx status, skip to the next URL
+                return False
 
             content_type = r.headers.get('content-type', '')
             if 'text/' in content_type:
                 click.echo(f"Skipping {url}, MIME type mismatch: {content_type}")
-                return False  # MIME type is not an image or video
+                return False
 
-            r.raise_for_status()  # Raise an error for other bad responses
+            r.raise_for_status()
 
             total_length = int(r.headers.get('content-length', 0))
             with open(local_filename, 'wb') as f:
-                if total_length == 0:  # Handle cases where content-length is not available
+                if total_length == 0:
                     f.write(r.content)
                 else:
                     for chunk in tqdm(r.iter_content(chunk_size=4096), total=total_length // 4096,
                                       desc=f"Downloading {filename}", unit='KB'):
-                        if chunk:  # Filter out keep-alive new chunks
+                        if chunk:
                             f.write(chunk)
-        return True  # Success
+            return True
     except Exception as e:
         click.echo(f"Error during download from {url}: {str(e)}")
-        return False  # Skip to the next URL
+        return False
 
 def process_url(url, new_domain):
     """Process a URL to change the domain and keep only the path."""
