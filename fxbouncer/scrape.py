@@ -42,8 +42,8 @@ def download_file(filename: str, url: str, output_directory: pathlib.Path) -> bo
 
     #  Check if the url has m3u8
     if '.m3u8' in url:
-        playlist = m3u8.load(url)
-        playlist.dump(local_filename + ".m3u8")
+        # playlist = m3u8.load(url)
+        # playlist.dump(local_filename + ".m3u8")
 
         # check if yt-dlp is available in the shell
         if not shutil.which("yt-dlp"):
